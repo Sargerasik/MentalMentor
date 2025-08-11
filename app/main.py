@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from redis.asyncio import Redis
 
 from app.core.settings import settings
-from app.api.v1 import health, user, auth
+from app.api.v1 import health, user, auth, notebook
 from app.core.observability import PrometheusMiddleware, CorrelationIdMiddleware, metrics_endpoint
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     app.include_router(user.router, prefix="/api/v1/users", tags=["users"])
+    app.include_router(notebook.router, prefix="/api/v1/notebook", tags=["notebook"])
 
     # /metrics без аутентификации — так принято для Prometheus; если нужно — вынесем за ingress
     app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], include_in_schema=False)
