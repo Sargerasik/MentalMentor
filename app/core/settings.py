@@ -34,6 +34,12 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
+    S3_ENDPOINT: str = "http://minio:9000"
+    S3_REGION: str = "us-east-1"
+    S3_BUCKET: str = "mentalmentor"
+    S3_ACCESS_KEY: str = "minioadmin"
+    S3_SECRET_KEY: str = "minioadmin"
+
     @property
     def db_url(self) -> str:
         if self.DATABASE_URL:

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from time import perf_counter_ns
-
+from app.services.storage import head_bucket
 from app.db.session import get_session
 
 router = APIRouter()
@@ -58,8 +58,20 @@ async def ready(request: Request, db: AsyncSession = Depends(get_session)) -> di
         "error": err,
     }
 
+    t2 = perf_counter_ns()
+    try:
+        ok = head_bucket()
+        s3_ok, err = bool(ok), None
+    except Exception as e:
+        s3_ok, err = False, str(e)
+        results["status"] = "degraded"
+    s3_ms = (perf_counter_ns() - t2) / 1_000_000
+    results["components"]["s3"] = {"ok": s3_ok, "latency_ms": round(s3_ms, 2), "bucket": settings.S3_BUCKET,
+                                   "error": err}
+
     # Итоговый статус
     if not results["components"]["postgres"]["ok"] or not results["components"]["redis"]["ok"]:
         results["status"] = "critical" if not results["components"]["postgres"]["ok"] else results["status"]
+
 
     return results

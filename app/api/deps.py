@@ -36,3 +36,16 @@ def require_admin(current_user = Depends(get_current_user)):
         if getattr(current_user.role, "value", None) != "admin":
             raise HTTPException(status_code=403, detail="Admin only")
     return current_user
+
+def require_roles(*roles: str):
+    """
+    Зависимость FastAPI: пропускает только пользователей с одной из указанных ролей.
+    Пример использования:
+      @router.get("/admin", dependencies=[Depends(require_roles("admin"))])
+    """
+    async def _checker(current_user = Depends(get_current_user)):
+        role_val = getattr(current_user.role, "value", current_user.role)
+        if role_val not in roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+        return current_user
+    return _checker
