@@ -1,0 +1,55 @@
+# локальные пути к файлам
+$P1 = ".\stress_part1.pdf"
+
+# ключи в бакете
+$K1 = "courses/stress101_part1.pdf"
+
+# presigned PUT для каждого
+$U1 = (Invoke-RestMethod -Headers @{Authorization="Bearer $ACCESS"} `
+  -Uri ("http://localhost:8000/api/v1/courses/upload_url?key=" + [uri]::EscapeDataString($K1)) -Method GET).upload_url
+
+# заливка внутрь docker-сети
+docker run --rm --network=mentalmentor_default -v "${PWD}:/work" curlimages/curl:latest `
+  -sS -i -X PUT -H "Content-Type: application/pdf" --upload-file "/work/$(Split-Path -Leaf $P1)" "$U1"
+
+# Создаем курс. Можно и через Swagger, но так удобней
+$course = Invoke-RestMethod -Headers @{ Authorization="Bearer $ACCESS"; "Content-Type"="application/json"} `
+  -Uri "http://localhost:8000/api/v1/courses" -Method POST `
+  -Body (@{
+    slug = "stress-101"
+    title = "Антистресс 101"
+    summary = "Базовый курс о снижении стресса"
+    storage_key = $K1
+    pdf_pages = 1           # если поле обязательно, поставь 1; иначе можно не передавать
+    version = 1
+    is_public = $true
+  } | ConvertTo-Json)
+
+# Создание этапов курса
+# helper для POST шага
+function New-Step($order, $title, $type, $config) {
+  Invoke-RestMethod -Headers @{ Authorization="Bearer $ACCESS"; "Content-Type"="application/json"} `
+    -Uri "http://localhost:8000/api/v1/courses/$COURSE_ID/steps" -Method POST `
+    -Body (@{
+      title = $title
+      order_index = $order
+      type = $type
+      config = $config
+    } | ConvertTo-Json -Depth 8)
+}
+
+# Шаг 0: Чтение PDF №1 (страницы 1-10)
+$s0 = New-Step 0 "Чтение: основы" "reading" @{
+  _type = "reading"
+  start_page = 1
+  end_page   = 10
+  storage_key = $K1
+}
+
+# Шаг 1: Медитация 10 минут
+$s1 = New-Step 1 "Медитация: дыхание" "meditation" @{
+  _type = "meditation"
+  duration_min = 10
+}
+
+# И так далее
