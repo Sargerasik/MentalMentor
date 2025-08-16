@@ -39,13 +39,18 @@ async def get_course(course_id: int, db: AsyncSession = Depends(get_session), _=
     return obj
 
 # --- AUTH: скачать PDF (pre-signed) ---
-@router.get("/{course_id}/download")
-async def download_course(course_id: int, db: AsyncSession = Depends(get_session), current_user = Depends(get_current_user)):
-    obj = await course_repo.get_by_id(db, course_id)
-    if not obj or not obj.is_public:
-        raise HTTPException(status_code=404, detail="Not found")
-    url = storage.presign_get(obj.storage_key)
-    return {"url": url}
+@router.get("/{course_id}/download", response_model=dict)
+async def download_course(course_id: int, user=Depends(get_current_user), db: AsyncSession = Depends(get_session)):
+    course = await course_repo.get(db, course_id)
+    if not course or (not course.is_public and not user):  # свои правила доступа
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    url = storage.presign_get(
+        key=course.storage_key,
+        filename=f"{course.slug}_v{course.version}.pdf",
+        expires=900,  # 15 минут
+    )
+    return {"url": url, "expires_in": 900}
 
 # --- AUTH: старт курса / мой прогресс ---
 @router.post("/{course_id}/start", response_model=CourseProgressRead, status_code=201)

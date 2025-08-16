@@ -3,6 +3,7 @@ from sqlalchemy import String, Text, Boolean, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base
 from app.models.mixins import TimestampMixin
+from sqlalchemy.orm import relationship
 
 class Courses(TimestampMixin, Base):
     __tablename__ = "courses"
@@ -19,3 +20,10 @@ class Courses(TimestampMixin, Base):
     # версии/видимость
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    steps = relationship(
+        "CourseStep",
+        back_populates="course",
+        cascade="all, delete-orphan",
+        order_by="CourseStep.order_index",
+    )

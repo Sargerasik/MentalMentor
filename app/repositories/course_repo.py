@@ -9,6 +9,10 @@ async def create(db: AsyncSession, **data) -> Courses:
     db.add(obj); await db.flush()
     return obj
 
+async def get(db: AsyncSession, course_id: int) -> Courses | None:
+    res = await db.execute(select(Courses).where(Courses.id == course_id))
+    return res.scalar_one_or_none()
+
 async def get_by_id(db: AsyncSession, course_id: int) -> Optional[Courses]:
     return await db.get(Courses, course_id)
 

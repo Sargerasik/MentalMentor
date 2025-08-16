@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     S3_BUCKET: str = "mentalmentor"
     S3_ACCESS_KEY: str = "minioadmin"
     S3_SECRET_KEY: str = "minioadmin"
+    S3_PUBLIC_ENDPOINT: str | None = None
 
     @property
     def db_url(self) -> str:
