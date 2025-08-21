@@ -51,8 +51,8 @@ services:
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
-      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:3000,http://localhost:8000
-      MINIO_API_CORS_ALLOW_METHODS: GET,HEAD
+      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:3000,http://localhost:8000,http://localhost:5173,http://127.0.0.1:5173
+      MINIO_API_CORS_ALLOW_METHODS: GET,HEAD,PUT
       MINIO_API_CORS_ALLOW_HEADERS: Authorization,Content-Type
     ports:
       - "9000:9000"   # S3 API

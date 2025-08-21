@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from redis.asyncio import Redis
+from starlette.middleware.cors import CORSMiddleware
 
 from app.core.settings import settings
 from app.api.v1 import health, user, auth, notebook, courses, course_steps
@@ -24,7 +25,15 @@ def create_app() -> FastAPI:
     # middlewares: сначала correlation-id, затем метрики
     app.add_middleware(CorrelationIdMiddleware)
     app.add_middleware(PrometheusMiddleware)
-
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+        expose_headers=["Content-Disposition"],
+        max_age=600,
+    )
     # routes
     app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
     app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
